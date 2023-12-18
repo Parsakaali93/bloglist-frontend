@@ -11,23 +11,31 @@ const App = () => {
   const [loggedInUser, setLoggedInUser] = useState(null)
   const [username, setUsername] = useState([])
   const [password, setPassword] = useState([])
-  let token = null
 
-  const setToken = newToken => { token = `Bearer ${newToken}` }
+  const [blogName, setBlogName] = useState([])
+  const [blogUrl, setBlogUrl] = useState([])
+  const [blogAuthor, setBlogAuthor] = useState([])
+
+
+  const setToken = newToken => { blogService.token = `Bearer ${newToken}` }
 
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedInUser') 
       if (loggedUserJSON) { 
         const user = JSON.parse(loggedUserJSON)
         setLoggedInUser(user)
-        setToken(user.token)}
+        setToken(user.token)
+      console.log(user.token)}
       }, [])
 
   useEffect(() => {
-    const config = { headers: { Authorization: token }, }
+    const config = { headers: { Authorization: blogService.token }, }
+    console.log(config)
+
+    if(blogService.token){
         blogService.getAllForUser(config).then(blogs =>
       setBlogs( blogs )
-    )  
+    )}
   }, [])
 
 
@@ -53,9 +61,31 @@ const handleLogin = async (event) => {
   }
 }
 
+const addBlog = async (event) => {
+  event.preventDefault()
+
+  const config = { headers: { Authorization: blogService.token }, }
+
+  let newBlog = {
+    title: blogName,
+    author: blogAuthor,
+    url: blogUrl
+  }
+
+  console.log(`Adding blog ${JSON.stringify(newBlog)} for user ${JSON.stringify(config)}`)
+
+  try{
+    const response = await blogService.addBlogService(config, newBlog)
+  }
+
+  catch(exception){
+    console.log(exception)
+  }
+}
+
 const test = () => {
   console.log(loggedInUser)
-  console.log(token)
+  // console.log(token)
 }
 
 const logout = () => {
@@ -85,11 +115,32 @@ const loggedInForm = () => (
   </div>
 )
 
+const loggedInAddBlog = () => (
+  <form className="addBlog" onSubmit={addBlog}>
+    <div className="addBlogField">Name
+
+    <input type="text" value={blogName}  onChange={({target}) => setBlogName(target.value)}></input>
+    </div>
+
+    <div className="addBlogField">Author
+
+       <input type="text" value={blogAuthor}  onChange={({target}) => setBlogAuthor(target.value)}></input>
+
+    </div>
+
+    <div className="addBlogField">Url
+    <input type="text" value={blogUrl}  onChange={({target}) => setBlogUrl(target.value)}></input>
+    </div>
+    <button type='submit'>Add</button>
+  </form>
+)
+
   return (
     <div>
       {!loggedInUser && loginForm()}
       {loggedInUser && loggedInForm()}
       <button onClick={test}>TEST</button>
+      {loggedInUser && loggedInAddBlog()}
       <h2>blogs</h2>
       {blogs.map(blog =>
         <Blog key={blog.id} blog={blog} />
