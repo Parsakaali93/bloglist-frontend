@@ -12,10 +12,12 @@ const App = () => {
   const [username, setUsername] = useState([])
   const [password, setPassword] = useState([])
 
-  const [blogName, setBlogName] = useState([])
-  const [blogUrl, setBlogUrl] = useState([])
-  const [blogAuthor, setBlogAuthor] = useState([])
-
+  const [blogName, setBlogName] = useState('')
+  const [blogUrl, setBlogUrl] = useState('')
+  const [blogAuthor, setBlogAuthor] = useState('')
+  const [errorVisible, setErrorVisible] = useState(false)
+  const [errorColor, setErrorColor] = useState(0)
+  const [errorMessageText, setErrorMessageText] = useState("An error has occurred")
 
   const setToken = newToken => { blogService.token = `Bearer ${newToken}` }
 
@@ -64,6 +66,12 @@ const handleLogin = async (event) => {
 const addBlog = async (event) => {
   event.preventDefault()
 
+  if(!blogName || !blogUrl || !blogAuthor)
+  {
+    showError("Please fill out all the fields", 0)
+    return
+  }
+
   const config = { headers: { Authorization: blogService.token }, }
 
   let newBlog = {
@@ -76,11 +84,42 @@ const addBlog = async (event) => {
 
   try{
     const response = await blogService.addBlogService(config, newBlog)
+    showError(`Successfully added blog ${response.title} by ${response.author}`, 1)
   }
 
   catch(exception){
-    console.log(exception)
+    showError(exception)
   }
+}
+const deleteBlog = async (id) => {
+  
+  try{
+  const response = blogService.deleteBlog(id)
+  showError('Successfully deleted blog', 1)
+
+  }
+
+  catch{
+    showError('Failed to delete blog', 0)
+
+  }
+
+   setBlogs(oldBlogs => oldBlogs.filter(oldBlog => oldBlog.id !== id))
+  /*
+     .then(returnedNotes => {
+          console.log(returnedNotes)
+          setNotes(returnedNotes)
+    })*/
+}
+
+const showError = (errorText, color) => {
+  setErrorMessageText(errorText)
+  setErrorColor(color)
+
+  setErrorVisible(true)
+
+  setTimeout(() => {
+  setErrorVisible(false)}, 5000)
 }
 
 const test = () => {
@@ -106,6 +145,10 @@ const loginForm = () => (
     </div>
     <button type="submit">LOGIN</button>
   </form>
+)
+
+const errorMessage = () => (
+  <div className='errorMessage' style={{border: errorColor===0 ? '3px solid red' : '3px solid green', color: errorColor===0 ? 'red' : 'green'}}><p>{errorMessageText}</p></div>
 )
 
 const loggedInForm = () => (
@@ -140,10 +183,11 @@ const loggedInAddBlog = () => (
       {!loggedInUser && loginForm()}
       {loggedInUser && loggedInForm()}
       <button onClick={test}>TEST</button>
+      {errorVisible && errorMessage()}
       {loggedInUser && loggedInAddBlog()}
       <h2>blogs</h2>
       {blogs.map(blog =>
-        <Blog key={blog.id} blog={blog} />
+        <Blog key={blog.id} deleteBlog={() => deleteBlog(blog.id)} blog={blog} />
       )}
     </div>
   )

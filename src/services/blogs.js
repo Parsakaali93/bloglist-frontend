@@ -19,4 +19,12 @@ const addBlogService = async (user, blog) => {
   return response.data
 }
 
-export default { getAll, getAllForUser, addBlogService }
+const deleteBlog = (id) => {
+  if(window.confirm("Do you really want to delete this blog?"))
+  {
+    const request = axios.delete(`${baseUrl}/${id}`)
+    return request.then(response => response.data)
+  }
+}
+
+export default { getAll, getAllForUser, addBlogService, deleteBlog }

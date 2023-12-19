@@ -6,3 +6,13 @@
     margin:10px 0;
     width:15%;
 }
+
+.errorMessage{
+    width:500px;
+    height:50px;
+    border:3px solid red;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin:25px;
+}
