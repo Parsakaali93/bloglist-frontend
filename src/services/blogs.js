@@ -27,4 +27,11 @@ const deleteBlog = (id) => {
   }
 }
 
-export default { getAll, getAllForUser, addBlogService, deleteBlog }
+const updateBlog = (blog) => {
+  console.log(blog.id)
+  console.log(blog)
+  const request = axios.put(`${baseUrl}/${blog.id}`, blog)
+  return request.then(response => response.data)
+}
+
+export default { getAll, getAllForUser, addBlogService, deleteBlog, updateBlog }

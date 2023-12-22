@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Blog from './components/Blog'
 import blogService from './services/blogs'
 import { formToJSON } from 'axios'
 import axios from 'axios'
-
+import AddBlogForm from './components/AddBlogForm'
+import Togglable from './components/Togglable'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
@@ -12,14 +13,12 @@ const App = () => {
   const [username, setUsername] = useState([])
   const [password, setPassword] = useState([])
 
-  const [blogName, setBlogName] = useState('')
-  const [blogUrl, setBlogUrl] = useState('')
-  const [blogAuthor, setBlogAuthor] = useState('')
   const [errorVisible, setErrorVisible] = useState(false)
   const [errorColor, setErrorColor] = useState(0)
   const [errorMessageText, setErrorMessageText] = useState("An error has occurred")
 
   const setToken = newToken => { blogService.token = `Bearer ${newToken}` }
+  const addBlogFormRef = useRef()
 
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedInUser') 
@@ -63,36 +62,23 @@ const handleLogin = async (event) => {
   }
 }
 
-const addBlog = async (event) => {
-  event.preventDefault()
+const submitBlog = async (blog) => {
 
-  if(!blogName || !blogUrl || !blogAuthor)
-  {
-    showError("Please fill out all the fields", 0)
-    return
-  }
-
+  //console.log(`Adding blog ${JSON.stringify(blog)} for user ${JSON.stringify(config)}`)
   const config = { headers: { Authorization: blogService.token }, }
 
-  let newBlog = {
-    title: blogName,
-    author: blogAuthor,
-    url: blogUrl
-  }
-
-  console.log(`Adding blog ${JSON.stringify(newBlog)} for user ${JSON.stringify(config)}`)
-
   try{
-    const response = await blogService.addBlogService(config, newBlog)
+    const response = await blogService.addBlogService(config, blog)
     showError(`Successfully added blog ${response.title} by ${response.author}`, 1)
+    addBlogFormRef.current.toggleVisibility()
   }
 
   catch(exception){
     showError(exception)
   }
 }
+
 const deleteBlog = async (id) => {
-  
   try{
   const response = blogService.deleteBlog(id)
   showError('Successfully deleted blog', 1)
@@ -133,6 +119,21 @@ const logout = () => {
   setToken(null)
 }
 
+const updateBlog = async(blog) => 
+{
+  try{
+    const updatedBlog = await blogService.updateBlog(blog)
+    console.log('Updated blog: ', updatedBlog)
+    setBlogs(oldBlogs => oldBlogs.map(oldBlog =>
+      oldBlog.id === updatedBlog.id ? updatedBlog : oldBlog
+    ));
+  }
+
+  catch(exception){
+    console.log(exception)
+  }
+}
+
 const loginForm = () => (
   <form onSubmit={handleLogin}>
     <div> USERNAME
@@ -158,36 +159,21 @@ const loggedInForm = () => (
   </div>
 )
 
-const loggedInAddBlog = () => (
-  <form className="addBlog" onSubmit={addBlog}>
-    <div className="addBlogField">Name
-
-    <input type="text" value={blogName}  onChange={({target}) => setBlogName(target.value)}></input>
-    </div>
-
-    <div className="addBlogField">Author
-
-       <input type="text" value={blogAuthor}  onChange={({target}) => setBlogAuthor(target.value)}></input>
-
-    </div>
-
-    <div className="addBlogField">Url
-    <input type="text" value={blogUrl}  onChange={({target}) => setBlogUrl(target.value)}></input>
-    </div>
-    <button type='submit'>Add</button>
-  </form>
-)
-
   return (
     <div>
       {!loggedInUser && loginForm()}
       {loggedInUser && loggedInForm()}
       <button onClick={test}>TEST</button>
       {errorVisible && errorMessage()}
-      {loggedInUser && loggedInAddBlog()}
+      {loggedInUser &&
+      <Togglable buttonLabel="Add New Blog" ref={addBlogFormRef}>
+      <AddBlogForm submitBlog={submitBlog}/>
+      </Togglable>
+      }
+      
       <h2>blogs</h2>
-      {blogs.map(blog =>
-        <Blog key={blog.id} deleteBlog={() => deleteBlog(blog.id)} blog={blog} />
+      {blogs.sort((a, b) => a.likes - b.likes).map(blog =>
+        <Blog key={blog.id} deleteBlog={() => deleteBlog(blog.id)} blog={blog} incrementLikes={updateBlog} />
       )}
     </div>
   )
