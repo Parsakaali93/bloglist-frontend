@@ -1,4 +1,5 @@
 import { useState, useImperativeHandle, forwardRef  } from 'react'
+import PropTypes from 'prop-types'
 
 /* Komponentin luova funktio on kääritty funktiokutsun forwardRef sisälle,
  jolloin komponentti pääsee käsiksi sille määriteltyyn refiin. */
@@ -33,5 +34,9 @@ const Togglable = forwardRef((props, ref) => {
     </div>
   )
 })
+
+Togglable.propTypes = {
+  buttonLabel: PropTypes.string.isRequired
+}
 
 export default Togglable
