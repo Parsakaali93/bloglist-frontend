@@ -20,7 +20,7 @@ const addBlogService = async (user, blog) => {
 }
 
 const deleteBlog = (id) => {
-  if(window.confirm("Do you really want to delete this blog?"))
+  if(window.confirm('Do you really want to delete this blog?'))
   {
     const request = axios.delete(`${baseUrl}/${id}`)
     return request.then(response => response.data)

@@ -16,10 +16,10 @@ const Togglable = forwardRef((props, ref) => {
   /* Komponentti tarjoaa useImperativeHandle-hookin avulla sisäisesti
    määritellyn funktionsa toggleVisibility ulkopuolelta kutsuttavaksi. */
   useImperativeHandle(ref, () => {
-        return {
-            toggleVisibility
-          }
-        })
+    return {
+      toggleVisibility
+    }
+  })
 
   return (
     <div>
